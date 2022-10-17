@@ -1,0 +1,180 @@
+diff --git a/node_modules/react-native-circular-slider/src/CircularSlider.js b/node_modules/react-native-circular-slider/src/CircularSlider.js
+index 32403b4..596fb02 100644
+--- a/node_modules/react-native-circular-slider/src/CircularSlider.js
++++ b/node_modules/react-native-circular-slider/src/CircularSlider.js
+@@ -1,5 +1,6 @@
+-import React, { PureComponent, PropTypes } from 'react';
+-import { PanResponder, View } from 'react-native';
++import React, { PureComponent } from 'react';
++import { PanResponder, View, Dimensions } from 'react-native';
++import PropTypes from 'prop-types';
+ import Svg, { Circle, G, LinearGradient, Path, Defs, Stop } from 'react-native-svg';
+ import range from 'lodash.range';
+ import { interpolateHcl as interpolateGradient } from 'd3-interpolate';
+@@ -61,6 +62,8 @@ export default class CircularSlider extends PureComponent {
+     bgCircleColor: PropTypes.string,
+     stopIcon: PropTypes.element,
+     startIcon: PropTypes.element,
++    upIcon: PropTypes.element,
++    downIcon: PropTypes.element,
+   }
+ 
+   static defaultProps = {
+@@ -78,7 +81,7 @@ export default class CircularSlider extends PureComponent {
+     circleCenterY: false,
+   }
+ 
+-  componentWillMount() {
++  UNSAFE_componentWillMount() {
+     this._sleepPanResponder = PanResponder.create({
+       onMoveShouldSetPanResponder: (evt, gestureState) => true,
+       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+@@ -131,7 +134,7 @@ export default class CircularSlider extends PureComponent {
+   setCircleCenter = () => {
+     this._circle.measure((x, y, w, h, px , py) => {
+       const halfOfContainer = this.getContainerWidth() / 2;
+-      this.setState({ circleCenterX: px + halfOfContainer, circleCenterY: py + halfOfContainer });
++      this.setState({ circleCenterX: px + halfOfContainer, circleCenterY: px + halfOfContainer });
+     });
+   }
+ 
+@@ -142,7 +145,7 @@ export default class CircularSlider extends PureComponent {
+ 
+   render() {
+     const { startAngle, angleLength, segments, strokeWidth, radius, gradientColorFrom, gradientColorTo, bgCircleColor,
+-      showClockFace, clockFaceColor, startIcon, stopIcon } = this.props;
++      showClockFace, clockFaceColor, startIcon, stopIcon, upIcon, downIcon } = this.props;
+ 
+     const containerWidth = this.getContainerWidth();
+ 
+@@ -151,6 +154,7 @@ export default class CircularSlider extends PureComponent {
+ 
+     return (
+       <View style={{ width: containerWidth, height: containerWidth }} onLayout={this.onLayout}>
++        <View style={{height: Dimensions.get("window").height * 0.095, width: Dimensions.get("window").width * 0.055, backgroundColor: '#221F25', position: 'absolute', zIndex: 1}} />
+         <Svg
+           height={containerWidth}
+           width={containerWidth}
+@@ -193,7 +197,7 @@ export default class CircularSlider extends PureComponent {
+             {
+               range(segments).map(i => {
+                 const { fromX, fromY, toX, toY } = calculateArcCircle(i, segments, radius, startAngle, angleLength);
+-                const d = `M ${fromX.toFixed(2)} ${fromY.toFixed(2)} A ${radius} ${radius} 0 0 1 ${toX.toFixed(2)} ${toY.toFixed(2)}`;
++                const d = `M ${fromX.toFixed(2)} ${fromY.toFixed(2)} A ${radius} ${radius} ${angleLength > (2 * Math.PI) / 2 ? "0 1 1" : "0 0 1"} ${toX.toFixed(2)} ${toY.toFixed(2)}`;
+ 
+                 return (
+                   <Path
+@@ -222,9 +226,28 @@ export default class CircularSlider extends PureComponent {
+                 fill={bgCircleColor}
+                 stroke={gradientColorTo}
+                 strokeWidth="1"
++                
+               />
++              <G transform={{ translate: `${-8}, ${-8}` }}>
++                {
++                  stopIcon
++                }
++              </G>
++              
++            </G>
++
++            {/*
++              ##### Up Icon and Down Icon
++            */}
++
++            <G transform={{ translate: `${-10}, ${10 - strokeWidth * 2}` }}>
++              {
++                upIcon
++              }
++            </G>
++            <G transform={{ translate: `${-10}, ${strokeWidth + 5}` }}>
+               {
+-                stopIcon
++                downIcon
+               }
+             </G>
+ 
+@@ -244,9 +267,11 @@ export default class CircularSlider extends PureComponent {
+                 stroke={gradientColorFrom}
+                 strokeWidth="1"
+               />
+-              {
+-                startIcon
+-              }
++              <G fill={bgCircleColor} transform={{ translate: `${-8}, ${-8}` }}>
++                {
++                  startIcon
++                }
++              </G>
+             </G>
+           </G>
+         </Svg>
+diff --git a/node_modules/react-native-circular-slider/src/ClockFace.js b/node_modules/react-native-circular-slider/src/ClockFace.js
+index c8d0db9..d1e6f3c 100644
+--- a/node_modules/react-native-circular-slider/src/ClockFace.js
++++ b/node_modules/react-native-circular-slider/src/ClockFace.js
+@@ -1,5 +1,6 @@
+-import React, { PureComponent, PropTypes } from 'react';
++import React, { PureComponent } from 'react';
+ import { G, Circle, Text, Line } from 'react-native-svg';
++import PropTypes from 'prop-types';
+ import range from 'lodash.range';
+ 
+ 
+@@ -13,7 +14,7 @@ export default class ClockFace extends PureComponent {
+   render() {
+     const { r, stroke } = this.props;
+     const faceRadius = r - 5;
+-    const textRadius = r - 26;
++    const textRadius = r - 33;
+ 
+     return (
+       <G>
+@@ -35,20 +36,42 @@ export default class ClockFace extends PureComponent {
+             );
+           })
+         }
+-      <G transform={{translate: "0, -9"}}>
++      <G transform={{translate: "0, 5"}}>
+           {
+-            range(12).map((h, i) => (
++            range(12).map((h, i) => {
++              let value = (h + 1) * 2;
++              switch(i) {
++                case 2: 
++                  value = "6AM";
++                  break;
++                case 5: 
++                  value = "12PM";
++                  break;
++                case 8: 
++                  value = "6PM";
++                  break;
++                case 11: 
++                  value = "12AM";
++                  break;
++                case 6:
++                case 7:
++                case 9:
++                case 10:
++                  value -= 12;
++              }
++
++              return (
+               <Text
+                 key={i}
+                 fill={stroke}
+-                fontSize="16"
++                fontSize="15"
+                 textAnchor="middle"
+                 x={textRadius * Math.cos(2 * Math.PI / 12 * i - Math.PI / 2 + Math.PI / 6)}
+                 y={textRadius * Math.sin(2 * Math.PI / 12 * i - Math.PI / 2 + Math.PI / 6)}
+               >
+-                {h + 1}
++                {value}
+               </Text>
+-            ))
++            )})
+           }
+         </G>
+       </G>
