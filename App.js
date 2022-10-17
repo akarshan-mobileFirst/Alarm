@@ -246,12 +246,12 @@
    upIcon: {
     position: 'absolute',
     zIndex: 1,
-    top: Dimensions.get("window").width * 0.22,
+    top: Dimensions.get("window").width * 0.23,
    },
    downIcon: {
     position: 'absolute',
     zIndex: 1,
-    bottom: Dimensions.get("window").width * 0.22,
+    bottom: Dimensions.get("window").width * 0.23,
    },
  });
  
