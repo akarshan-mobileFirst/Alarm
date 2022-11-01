@@ -15,13 +15,16 @@
    useColorScheme,
    View,
    Dimensions,
-   ScrollView
+   ScrollView,
+   LogBox
  } from 'react-native';
+ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
  import Ionicons from 'react-native-vector-icons/Ionicons';
  import Octicons from 'react-native-vector-icons/Octicons';
  import Feather from 'react-native-vector-icons/Feather';
- import CircularSlider from 'react-native-circular-slider';
  import moment from 'moment';
+
+ LogBox.ignoreAllLogs();
  
  const App = () => {
    const [startAngle, setStartAngle] = useState(1);
@@ -112,27 +115,119 @@
               <Text style={styles.timeHeading}>Tomorrow</Text>
             </View>
           </View>
-          <View style={styles.circularSliderWrapper}>
-            <Ionicons name="bed" size={20} color="#55B7B5" style={styles.upIcon} />
-            <Feather name="sun" size={20} color="#BB9E26" style={styles.downIcon} />
-            <CircularSlider
-              startAngle={startAngle}
-              angleLength={angleLength}
-              onUpdate={item => {
-                if (!!item && item?.angleLength && item?.startAngle) {
-                  setStartAngle(item.startAngle);
-                  setAngleLength(item.angleLength);
-                }
-              }}
-              segments={1}
-              strokeWidth={40}
-              radius={Dimensions.get("window").width * 0.35}
-              gradientColorFrom={gradientColorFrom}
-              gradientColorTo={gradientColorTo}
-              showClockFace
-              clockFaceColor="#9d9d9d"
-              bgCircleColor="#171717"
-            />
+          <View style={styles.clockCircle}>
+            <View style={styles.clockLayoutWrapper}>
+              <View style={{
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                alignSelf: 'center',
+                height: Dimensions.get("window").width * 0.55,
+                width: Dimensions.get("window").width * 0.55,
+              }}>
+                {/* Dots */}
+                {Array(60).fill(0).map((item, index) => (
+                  <View style={{
+                    backgroundColor: 'transparent',
+                    height: Dimensions.get("window").width * 0.52,
+                    width: Dimensions.get("window").width * 0.52,
+                    alignSelf: 'center',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: [{
+                      rotateZ: `${index * 3}deg`,
+                    }],
+                    position: 'absolute'
+                  }}>
+                    <View
+                      style={{
+                       height: Dimensions.get("window").width * 0.52,
+                       width: 1,
+                       justifyContent: 'space-between',
+                      }}
+                    >
+                      <View
+                        style={{
+                          height: index % 5 === 0 ? 7 : 3,
+                          width: 1,
+                          backgroundColor: '#FFFFFF',
+                        }} 
+                      />
+                      <View
+                        style={{
+                          height: index % 5 === 0 ? 7 : 3,
+                          width: 1,
+                          backgroundColor: '#FFFFFF',
+                        }} 
+                      />
+                    </View>
+                  </View>
+                ))}
+                {/* Time */}
+                {Array(6).fill(0).map((item, index) => (
+                  <View style={{
+                    backgroundColor: 'transparent',
+                    height: Dimensions.get("window").width * 0.45,
+                    width: Dimensions.get("window").width * 0.45,
+                    alignSelf: 'center',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: [{
+                      rotateZ: `${index * 30}deg`,
+                    }],
+                    position: 'absolute'
+                  }}>
+                    <View style={{
+                       height: Dimensions.get("window").width * 0.45,
+                       width: index % 3 === 0 ? Dimensions.get("window").width * 0.1 : Dimensions.get("window").width * 0.05,
+                       justifyContent: 'space-between',
+                    }}>
+                    <Text style={{
+                      color: index % 3 === 0 ? '#FFFFFF' : 'grey',
+                      textAlign: 'center',
+                      fontSize: index % 3 === 0 ? 14 : 13,
+                      fontWeight: index % 3 === 0 ? 'bold' : '700',
+                      transform: [{
+                        rotateZ: `${-index * 30}deg`,
+                      }],
+                    }}>
+                      {index === 0 ? 12 : index * 2}
+                      {index % 3 === 0 
+                        ? (<Text style={{fontSize: 13}}>AM</Text>)
+                        : (<Text />)
+                      }
+                    </Text>
+                    <Text style={{
+                      color: index % 3 === 0 ? '#FFFFFF' : 'grey',
+                      textAlign: 'center',
+                      fontSize: index % 3 === 0 ? 14 : 13,
+                      fontWeight: index % 3 === 0 ? 'bold' : '700',
+                      transform: [{
+                        rotateZ: `${-index * 30}deg`,
+                      }],
+                    }}>
+                      {index === 0 ? 12 : index * 2}
+                      {index % 3 === 0 
+                        ? (<Text style={{fontSize: 13}}>PM</Text>)
+                        : (<Text />)
+                      }
+                    </Text>
+                    </View>
+                  </View>
+                ))}
+                {/* Time Icons */}
+                <View style={{
+                    height: Dimensions.get("window").width * 0.34,
+                    width: Dimensions.get("window").width * 0.1,
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    alignSelf: 'center',
+                    position: 'absolute'
+                  }}>
+                    <MaterialCommunityIcons name="weather-night" size={20} color="#55B7B5" />
+                    <Feather name="sun" size={20} color="#BB9E26" />
+                  </View>
+              </View>
+            </View>
           </View>
           <Text style={styles.totalTimeText}>{timeDifference}</Text>
           {!isSleepGoalMatched
@@ -168,7 +263,22 @@
      fontWeight: 'bold',
      marginVertical: 3,
    },
-   circularSliderWrapper: {alignItems: 'center'},
+   clockCircle: {
+    height: Dimensions.get("window").width * 0.8,
+    width: Dimensions.get("window").width * 0.8,
+    borderRadius: Dimensions.get("window").width * 0.8,
+    backgroundColor: '#000000',
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center'
+   },
+   clockLayoutWrapper: {
+    height: Dimensions.get("window").width * 0.55,
+    width: Dimensions.get("window").width * 0.55,
+    borderRadius: Dimensions.get("window").width * 0.55,
+    backgroundColor: '#221F25',
+    alignSelf: 'center'
+   },
    clockContainer: {
      backgroundColor: '#221F25',
      padding: 20,
@@ -242,16 +352,6 @@
      color: 'white',
      fontSize: 22,
      textAlign: 'center',
-   },
-   upIcon: {
-    position: 'absolute',
-    zIndex: 1,
-    top: Dimensions.get("window").width * 0.23,
-   },
-   downIcon: {
-    position: 'absolute',
-    zIndex: 1,
-    bottom: Dimensions.get("window").width * 0.23,
    },
  });
  
