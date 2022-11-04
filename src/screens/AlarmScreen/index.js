@@ -267,7 +267,8 @@
                 <Text style={styles.infoText}>{`!`}</Text>
               </View>
               <Text
-                style={styles.meetText}>{` ${notMeetSleepGoalMessage}`}</Text>
+                style={styles.meetText}>{` ${notMeetSleepGoalMessage}`}
+              </Text>
           </View>
         : <Text style={styles.meetText}>{` ${meetSleepGoalMessage}`}</Text>
         }
