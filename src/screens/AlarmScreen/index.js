@@ -499,7 +499,7 @@
                         ...styles.textAlignCenter,
                         fontSize: index % 3 === 0 ? 14 : 13,
                         fontWeight: index % 3 === 0 ? 'bold' : '700',
-                        color: index % 3 === 0 ? '#FFFFFF' : 'grey',
+                        color: index % 3 === 0 ? '#C3C1C3' : '#706F74',
                         transform: [{
                             rotateZ: `${-index * 30}deg`,
                         }],
@@ -512,7 +512,7 @@
                     </Text>
                     <Text style={{
                         ...styles.textAlignCenter,
-                        color: index % 3 === 0 ? '#FFFFFF' : 'grey',
+                        color: index % 3 === 0 ? '#C3C1C3' : '#706F74',
                         fontSize: index % 3 === 0 ? 14 : 13,
                         fontWeight: index % 3 === 0 ? 'bold' : '700',
                         transform: [{

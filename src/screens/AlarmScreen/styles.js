@@ -35,11 +35,11 @@
         height: deviceWidth * 0.55,
         width: deviceWidth * 0.55,
         borderRadius: deviceWidth * 0.55 / 2,
-        backgroundColor: '#221F25',
+        backgroundColor: '#262427',
         alignSelf: 'center'
     },
     clockContainer: {
-        backgroundColor: '#221F25',
+        backgroundColor: '#262427',
         padding: 20,
         borderRadius: 10,
     },
@@ -159,7 +159,7 @@
     },
     clockInnerDots: {
         width: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#464448',
     },
     timeCountingContainer: {
         position: 'absolute',
