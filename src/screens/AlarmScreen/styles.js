@@ -86,7 +86,7 @@
     info: {
         backgroundColor: '#CA7F22',
         borderRadius: deviceWidth * 0.028,
-        marginTop: deviceHeight * 0.01,
+        marginTop: 7,
     },
     infoText: {
         color: 'black',
