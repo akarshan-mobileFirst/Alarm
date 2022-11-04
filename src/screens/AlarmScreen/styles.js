@@ -19,6 +19,9 @@
         fontWeight: 'bold',
         marginVertical: 3,
     },
+    scrollView: {
+        marginTop: deviceHeight * 0.035,
+    },
     clockCircle: {
         height: deviceWidth * 0.8,
         width: deviceWidth * 0.8,
@@ -39,7 +42,6 @@
         backgroundColor: '#221F25',
         padding: 20,
         borderRadius: 10,
-        marginVertical: 15,
     },
     timeContainer: {
         flexDirection: 'row',
@@ -188,7 +190,7 @@
    },
    dailySleepGoalModalContainer: {
         backgroundColor: '#36454F',
-        height: deviceHeight * 0.4,
+        height: deviceHeight * 0.45,
         width: deviceWidth * 0.9,
         alignSelf: 'center',
         marginTop: deviceHeight * 0.1,

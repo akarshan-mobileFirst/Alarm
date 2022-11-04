@@ -7,6 +7,7 @@
    Animated,
    StatusBar,
    TextInput,
+   ScrollView,
    PanResponder,
    SafeAreaView,
    TouchableOpacity,
@@ -571,16 +572,21 @@
 
       {/* ALARM CLOCK */}
       {!modalVisible && (
-        <View style={styles.clockContainer}>
-            {/* TIME HEADING COMPONENT */}
-            {timeHeading()}
+        <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+        >
+            <View style={styles.clockContainer}>
+                {/* TIME HEADING COMPONENT */}
+                {timeHeading()}
 
-            {/* ALARM CLOCK COMPONENT */}
-            {alarmClockComponent()}
+                {/* ALARM CLOCK COMPONENT */}
+                {alarmClockComponent()}
 
-            {/* ALARM CLOCK FOOTER COMPONENT */}
-            {alarmFooter()}
-        </View>
+                {/* ALARM CLOCK FOOTER COMPONENT */}
+                {alarmFooter()}
+            </View>
+        </ScrollView>
       )}
 
       {/* SLEEP GOAL RANGE EDIT MODAL */}
