@@ -264,7 +264,7 @@
         {!isSleepGoalMatched
           ? <View style={styles.messageContainer}>
               <View style={styles.info}>
-                <Text style={styles.infoText}>{`  !  `}</Text>
+                <Text style={styles.infoText}>{`!`}</Text>
               </View>
               <Text
                 style={styles.meetText}>{` ${notMeetSleepGoalMessage}`}</Text>

@@ -84,12 +84,17 @@
         marginTop: 5,
     },
     info: {
-        backgroundColor: '#BB9E26',
-        borderRadius: 15,
+        backgroundColor: '#CA7F22',
+        borderRadius: deviceWidth * 0.015,
         marginTop: 5,
     },
     infoText: {
         color: 'black',
+        height: deviceWidth * 0.03,
+        width: deviceWidth * 0.03,
+        textAlign: 'center',
+        fontSize: 7,
+        fontWeight: 'bold'
     },
     goalTimeContainer: {
         paddingTop: 15,
