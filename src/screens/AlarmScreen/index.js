@@ -44,7 +44,9 @@
   const [wakeUpTime, setWakeUpTime] = useState("12:00 PM");
   const [timeDifference, setTimeDifference] = useState("12 hr 0 min");
   const [isSleepGoalMatched, setSleepGoalMatched] = useState(false);
-  const [sleepGoalColorMatched, setSleepGoalColorMatched] = useState('#8F8D92');
+  const [outerLinesColor, setOuterLinesColor] = useState('rgba(0, 0, 0, 0.15)');
+  const [sleepGoalColorMatched, setSleepGoalColorMatched] = useState('#CA7F22');
+  const [sleepGoalIconColorMatched, setSleepGoalIconColorMatched] = useState('#72260A');
   const [percent, setPercent] = useState(50);
   const [progressLayer, setProgressLayer] = useState(progressLayerBaseValue);
   const [offsetLayer, setOffsetLayer] = useState(offsetLayerBaseValue);
@@ -222,13 +224,17 @@
         if (timeDifferenceInMinutes >= startRangeInMinutes
           && timeDifferenceInMinutes <= endRangeInMinutes) {
             setSleepGoalMatched(true);
-            setSleepGoalColorMatched('#8F8D92');
+            setSleepGoalColorMatched('#262427');
+            setSleepGoalIconColorMatched('#727277');
+            setOuterLinesColor('#000000');
             return;
         }
       }
     }
     setSleepGoalMatched(false);
-    setSleepGoalColorMatched('#ff9800');
+    setSleepGoalColorMatched('#CA7F22');
+    setSleepGoalIconColorMatched('#72260A');
+    setOuterLinesColor('rgba(0, 0, 0, 0.15)');
   };
 
   const timeHeading = () => (
@@ -389,8 +395,8 @@
                 }],
             }}
             >
-            <View style={styles.clockOuterDots} />
-            <View style={styles.clockOuterDots} />
+            <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
+            <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
             </View>
         ))}
     </>
@@ -401,6 +407,7 @@
         {/* Bed Icon */}
         <Animated.View style={{
             ...styles.rotatingIcon,
+            backgroundColor: sleepGoalColorMatched,
             borderRadius: iconSize + deviceWidth * 0.023,
             transform: [
                 {
@@ -413,12 +420,13 @@
             }}
             {...panResponderBed.panHandlers}
         >
-            <Ionicons name="bed" size={iconSize} color="#8F8D92" />
+            <Ionicons name="bed" size={iconSize} color={sleepGoalIconColorMatched} />
         </Animated.View>
 
         {/* Bell Icon */}
         <Animated.View style={{
             ...styles.rotatingIcon,
+            backgroundColor: sleepGoalColorMatched,
             paddingHorizontal: deviceWidth * 0.028,
             borderRadius: deviceWidth * 0.05 + deviceWidth * 0.023,
             transform: [
@@ -432,7 +440,7 @@
             }}
             {...panResponderBell.panHandlers}
         >
-            <Octicons name="bell-fill" size={deviceWidth * 0.05} color="#8F8D92"  />
+            <Octicons name="bell-fill" size={deviceWidth * 0.05} color={sleepGoalIconColorMatched}  />
         </Animated.View>
     </>
   );
@@ -574,6 +582,7 @@
       {!modalVisible && (
         <ScrollView
             style={styles.scrollView}
+            bounces={false}
             showsVerticalScrollIndicator={false}
         >
             <View style={styles.clockContainer}>

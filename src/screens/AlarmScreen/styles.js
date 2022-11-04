@@ -139,12 +139,10 @@
     clockOuterDots: {
         height: 13,
         width: 2.5,
-        backgroundColor: 'rgba(0, 0, 0, 0.15)',
     },
     rotatingIcon: {
         position: 'absolute',
         zIndex: 1,
-        backgroundColor: 'blue',
         padding: deviceWidth * 0.023,
         marginVertical: deviceWidth * 0.002 * 2,
     },
@@ -223,8 +221,8 @@
    goalRangeTextInput: {
         backgroundColor: 'white',
         marginHorizontal: 5,
-        paddingHorizontal: 10,
-        fontSize: 16,
+        padding: 10,
+        fontSize: 18,
         borderRadius: 5,
    },
    startGoalRangeTextInput: {
