@@ -24,25 +24,27 @@
  
  const AlarmScreen = () => {  
   // Constants
-  const { dimensions, messages, screenHeadings } = Constants;
+  const { clockConstants, dimensions, messages, screenHeadings } = Constants;
+  const {
+    clockCircleBorderRadius,
+    clockCircleSize,
+    clockFaceCircleSize,
+    iconPadding,
+    iconRotationCircleBorderRadius,
+    iconRotationCircleSize,
+    iconSize,
+    offsetLayerBaseValue,
+    progressLayerBaseValue,
+    radius,
+  } = clockConstants;
   const { deviceWidth } = dimensions;
   const { meetSleepGoalMessage, notMeetSleepGoalMessage } = messages;
   const { alarmScreenHeading } = screenHeadings;
-  const progressLayerBaseValue = 45;
-  const offsetLayerBaseValue = -135;
-  const clockCircleSize = deviceWidth * 0.8;
-  const clockCircleBorderRadius = clockCircleSize / 2;
-  const iconRotationCircleSize = deviceWidth * 0.77;
-  const iconRotationCircleBorderRadius = iconRotationCircleSize / 2;
-  const clockFaceCircleSize = deviceWidth * 0.55;
-  const iconSize = deviceWidth * 0.053;
-  const iconPadding = deviceWidth * 0.023;
-  const radius = iconRotationCircleBorderRadius - iconSize + 1; // Circle Radius - Icon Size
 
   // Ref
   const circleRef = useRef();
 
-  // State
+  // States
   const [startAngle, setStartAngle] = useState(0);
   const [angleLength, setAngleLength] = useState(Math.PI);
   const [angleDifference, setAngleDifference] = useState(0);
