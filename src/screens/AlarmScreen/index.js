@@ -1,4 +1,4 @@
- import React, { useEffect, useState, useRef } from 'react';
+ import React, { useLayoutEffect, useState, useRef } from 'react';
  import {
    View,
    Text,
@@ -32,21 +32,24 @@
   const offsetLayerBaseValue = -135;
   const clockCircleSize = deviceWidth * 0.8;
   const clockCircleBorderRadius = clockCircleSize / 2;
-  const outerCircleSize = deviceWidth * 0.77;
-  const outerCircleBorderRadius = outerCircleSize / 2;
+  const iconRotationCircleSize = deviceWidth * 0.77;
+  const iconRotationCircleBorderRadius = iconRotationCircleSize / 2;
   const clockFaceCircleSize = deviceWidth * 0.55;
   const iconSize = deviceWidth * 0.053;
-  const radius = outerCircleBorderRadius - iconSize + 1; // Circle Radius - Icon Size
+  const iconPadding = deviceWidth * 0.023;
+  const radius = iconRotationCircleBorderRadius - iconSize + 1; // Circle Radius - Icon Size
 
   // Ref
-  const circleRef = useRef(null);
+  const circleRef = useRef();
 
   // State
   const [startAngle, setStartAngle] = useState(0);
-  const [angleLength, setAngleLength] = useState(3.15);
+  const [angleLength, setAngleLength] = useState(Math.PI);
+  const [angleDifference, setAngleDifference] = useState(0);
   const [bedTime, setBedTime] = useState("12:00 AM");
   const [wakeUpTime, setWakeUpTime] = useState("12:00 PM");
-  const [timeDifference, setTimeDifference] = useState("12 hr 0 min");
+  const [hoursDifference, setHoursDifference] = useState(12);
+  const [minutesDifference, setMinutesDifference] = useState(0);
   const [isSleepGoalMatched, setSleepGoalMatched] = useState(false);
   const [outerLinesColor, setOuterLinesColor] = useState('rgba(0, 0, 0, 0.15)');
   const [sleepGoalColorMatched, setSleepGoalColorMatched] = useState('#CA7F22');
@@ -61,7 +64,6 @@
   const [endRange, setEndRange] = useState('8');
   const [startRangeInput, setStartRangeInput] = useState('7');
   const [endRangeInput, setEndRangeInput] = useState('8');
-  const [angleDifference, setAngleDifference] = useState(0);
   
   // Pan Responders
   const panResponderBed =
@@ -86,14 +88,8 @@
               newAngleLength += 2 * Math.PI;
             }
 
-            Animated.timing(new Animated.Value(startAngle), {
-              toValue: newAngle,
-              duration: 0,
-              useNativeDriver: false,
-            }).start(() => {
-              setStartAngle(newAngle);
-              setAngleLength(newAngleLength);
-            });
+            setStartAngle(newAngle);
+            setAngleLength(newAngleLength);
             
           },
         },
@@ -115,13 +111,7 @@
               newAngleLength += 2 * Math.PI;
             }
 
-            Animated.timing(new Animated.Value(angleLength), {
-              toValue: newAngleLength,
-              duration: 0,
-              useNativeDriver: false,
-            }).start(() => {
-              setAngleLength(newAngleLength);
-            });
+            setAngleLength(newAngleLength);
           },
         },
       ),
@@ -151,20 +141,14 @@
               newAngle -= 2 * Math.PI;
             }
 
-            Animated.timing(new Animated.Value(startAngle), {
-              toValue: newAngle,
-              duration: 0,
-              useNativeDriver: false,
-            }).start(() => {
-              setStartAngle(newAngle);
-            });
+            setStartAngle(newAngle);
           },
         },
       ),
     });
 
   // Hook
-  useEffect(() => {
+  useLayoutEffect(() => {
     // PROGRESS AND OFFSET LAYER CHANGES
     const startAngleDegree = Math.round((startAngle * 360) / (Math.PI * 2));
     const angleLengthDegree = Math.round((angleLength * 360) / (Math.PI * 2));
@@ -185,14 +169,15 @@
     );
     const minutesLong = calculateMinutesFromAngle(angleLength);
     const hours = Math.floor(minutesLong / 60);
-    const minutes = minutesLong - hours * 60;
-    setTimeDifference(`${hours} hr ${minutes} min`);
+    const minutes = Math.round(minutesLong - hours * 60);
+    setHoursDifference(hours);
+    setMinutesDifference(minutes);
     sleepGoalMatched();
   }, [startAngle, angleLength]);
   
   // Methods
   const calculateMinutesFromAngle = angle =>
-    Math.round(angle / ((2 * Math.PI) / (12 * 12))) * 5 * 2;
+    (angle / ((2 * Math.PI) / (12 * 12))) * 5 * 2;
 
   const calculateTimeFromAngle = angle => {
     const minutes = calculateMinutesFromAngle(angle);
@@ -233,19 +218,17 @@
   }
 
   const sleepGoalMatched = () => {
-    if(timeDifference) {
-      if(timeDifference.split(' ').length === 4) {
-        const startRangeInMinutes = parseInt(startRange, 10) * 60;
-        const endRangeInMinutes = parseInt(endRange, 10) * 60;
-        const timeDifferenceInMinutes = parseInt(timeDifference.split(' ')[0], 10) * 60 + parseInt(timeDifference.split(' ')[2], 10);
-        if(timeDifferenceInMinutes >= startRangeInMinutes
-          && timeDifferenceInMinutes <= endRangeInMinutes) {
-            setSleepGoalMatched(true);
-            setSleepGoalColorMatched('#262427');
-            setSleepGoalIconColorMatched('#727277');
-            setOuterLinesColor('#000000');
-            return;
-        }
+    if(hoursDifference >= 0 && minutesDifference >= 0) {
+      const startRangeInMinutes = parseInt(startRange, 10) * 60;
+      const endRangeInMinutes = parseInt(endRange, 10) * 60;
+      const totalTimeDifferenceInMinutes = hoursDifference * 60 + minutesDifference;
+      if(totalTimeDifferenceInMinutes >= startRangeInMinutes
+        && totalTimeDifferenceInMinutes <= endRangeInMinutes) {
+          setSleepGoalMatched(true);
+          setSleepGoalColorMatched('#262427');
+          setSleepGoalIconColorMatched('#727277');
+          setOuterLinesColor('#000000');
+          return;
       }
     }
     setSleepGoalMatched(false);
@@ -277,7 +260,7 @@
 
   const alarmFooter = () => (
     <>
-        <Text style={styles.totalTimeText}>{timeDifference}</Text>
+        <Text style={styles.totalTimeText}>{`${hoursDifference} hr ${minutesDifference} min`}</Text>
         {!isSleepGoalMatched
           ? <View style={styles.messageContainer}>
               <View style={styles.info}>
@@ -379,10 +362,10 @@
             ...styles.progressOffsetLayer,
             borderRightColor: sleepGoalColorMatched,
             borderTopColor: sleepGoalColorMatched,
-            borderWidth: iconSize + deviceWidth * 0.023 * 2,
-            height: outerCircleSize,
-            width: outerCircleSize,
-            borderRadius: outerCircleBorderRadius,
+            borderWidth: iconSize + iconPadding * 2,
+            height: iconRotationCircleSize,
+            width: iconRotationCircleSize,
+            borderRadius: iconRotationCircleBorderRadius,
             transform: [{rotateZ: `${progressLayer}deg`}],
             }}
             {...panResponderDifference.panHandlers}
@@ -393,10 +376,10 @@
             ...styles.progressOffsetLayer,
             borderRightColor: percent > 50 ? sleepGoalColorMatched : 'black',
             borderTopColor: percent > 50 ? sleepGoalColorMatched : 'black',
-            borderWidth: iconSize + deviceWidth * 0.023 * 2,
-            height: outerCircleSize,
-            width: outerCircleSize,
-            borderRadius: outerCircleBorderRadius,
+            borderWidth: iconSize + iconPadding * 2,
+            height: iconRotationCircleSize,
+            width: iconRotationCircleSize,
+            borderRadius: iconRotationCircleBorderRadius,
             transform: [{rotateZ: `${offsetLayer}deg`}],
             }}
             {...panResponderDifference.panHandlers}
@@ -426,7 +409,8 @@
         <Animated.View style={{
             ...styles.rotatingIcon,
             backgroundColor: sleepGoalColorMatched,
-            borderRadius: iconSize + deviceWidth * 0.023,
+            padding: deviceWidth * 0.0215,
+            borderRadius: iconSize + deviceWidth * 0.0215,
             transform: [
                 {
                   translateX: calculateArcCircle().fromX,
@@ -445,7 +429,8 @@
         <Animated.View style={{
             ...styles.rotatingIcon,
             backgroundColor: sleepGoalColorMatched,
-            paddingHorizontal: deviceWidth * 0.028,
+            padding: deviceWidth * 0.023,
+            paddingHorizontal: deviceWidth * 0.0265,
             borderRadius: deviceWidth * 0.05 + deviceWidth * 0.023,
             transform: [
                 {
@@ -589,9 +574,9 @@
       >
           <View style={{
               ...styles.contentAlignCenter,
-              height: outerCircleSize,
-              width: outerCircleSize,
-              borderRadius: outerCircleBorderRadius,
+              height: iconRotationCircleSize,
+              width: iconRotationCircleSize,
+              borderRadius: iconRotationCircleBorderRadius,
             }}
           >
               {/* Icon Difference */}

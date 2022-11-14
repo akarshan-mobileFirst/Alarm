@@ -130,7 +130,7 @@
         zIndex: 1,
         borderLeftColor: 'transparent',
         borderBottomColor: 'transparent',
-        marginVertical: deviceWidth * 0.002 * 2,
+        marginVertical: deviceWidth * 0.004,
     },
     clockOuterDotsContainer: {
         height: deviceWidth * 0.7,
@@ -146,8 +146,7 @@
     rotatingIcon: {
         position: 'absolute',
         zIndex: 1,
-        padding: deviceWidth * 0.023,
-        marginVertical: deviceWidth * 0.002 * 2,
+        marginVertical: deviceWidth * 0.004,
     },
     clockInnerDotsContainer: {
         position: 'absolute',
@@ -222,7 +221,7 @@
         fontWeight: '400',
    },
    goalRangeTextInput: {
-        backgroundColor: 'white',
+        backgroundColor: '#FFFFFF',
         marginHorizontal: 5,
         padding: 10,
         fontSize: 18,
