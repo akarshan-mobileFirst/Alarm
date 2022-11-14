@@ -18,16 +18,20 @@
  import Octicons from 'react-native-vector-icons/Octicons';
  import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
  
- // File Inports
+ // File Imports
  import styles from './styles';
  import Constants from '../../utils/constants';
  
  const AlarmScreen = () => {  
   // Constants
-  const { deviceWidth, meetSleepGoalMessage, notMeetSleepGoalMessage } = Constants;
-  const screenHeading = "Change Wake Up";
+  const { dimensions, messages, screenHeadings } = Constants;
+  const { deviceWidth } = dimensions;
+  const { meetSleepGoalMessage, notMeetSleepGoalMessage } = messages;
+  const { alarmScreenHeading } = screenHeadings;
   const progressLayerBaseValue = 45;
   const offsetLayerBaseValue = -135;
+  const clockCircleSize = deviceWidth * 0.8;
+  const clockCircleBorderRadius = clockCircleSize / 2;
   const outerCircleSize = deviceWidth * 0.77;
   const outerCircleBorderRadius = outerCircleSize / 2;
   const clockFaceCircleSize = deviceWidth * 0.55;
@@ -57,108 +61,121 @@
   const [endRange, setEndRange] = useState('8');
   const [startRangeInput, setStartRangeInput] = useState('7');
   const [endRangeInput, setEndRangeInput] = useState('8');
-  const [panResponderBed, setPanResponderBed] = useState(
+  const [angleDifference, setAngleDifference] = useState(0);
+  
+  // Pan Responders
+  const panResponderBed =
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-      onPanResponderMove: (evt, gestureState) => {},
-    })
-  );
-  const [panResponderBell, setPanResponderBell] = useState(
+      onPanResponderMove: Animated.event(
+        [],
+        {
+          useNativeDriver: false,
+          listener: (evt, { moveX, moveY }) => {
+            const currentAngleStop = (startAngle + angleLength) % (2 * Math.PI);
+            let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI / 2;
+
+            if(newAngle < 0) {
+              newAngle += 2 * Math.PI;
+            }
+
+            let newAngleLength = (currentAngleStop - newAngle) % (2 * Math.PI);
+
+            if(newAngleLength < 0) {
+              newAngleLength += 2 * Math.PI;
+            }
+
+            Animated.timing(new Animated.Value(startAngle), {
+              toValue: newAngle,
+              duration: 0,
+              useNativeDriver: false,
+            }).start(() => {
+              setStartAngle(newAngle);
+              setAngleLength(newAngleLength);
+            });
+            
+          },
+        },
+      ),
+    });
+  const panResponderBell = 
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-      onPanResponderMove: (evt, gestureState) => {},
-    })
-  );
-  const [panResponderDiffernce, setPanResponderDifference] = useState(
+      onPanResponderMove: Animated.event(
+        [],
+        {
+          useNativeDriver: false,
+          listener: (evt, { moveX, moveY }) => {
+            const newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI / 2;
+            let newAngleLength = (newAngle - startAngle) % (2 * Math.PI);
+
+            if(newAngleLength < 0) {
+              newAngleLength += 2 * Math.PI;
+            }
+
+            Animated.timing(new Animated.Value(angleLength), {
+              toValue: newAngleLength,
+              duration: 0,
+              useNativeDriver: false,
+            }).start(() => {
+              setAngleLength(newAngleLength);
+            });
+          },
+        },
+      ),
+    });
+  const panResponderDifference = 
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-      onPanResponderMove: (evt, gestureState) => {},
-    })
-  );
+      onPanResponderGrant: (evt, { moveX, moveY }) => {
+        let angDiff = Math.atan2(moveY - circleCenterY, moveX - circleCenterX);
+        
+        if(angDiff < 0) {
+          angDiff -= 2 * Math.PI;
+        }
+
+        angDiff -= startAngle;
+        setAngleDifference(angDiff);
+      },
+      onPanResponderMove: Animated.event(
+        [],
+        {
+          useNativeDriver: false,
+          listener: (evt, { moveX, moveY }) => {
+            let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) - angleDifference;
+            
+            if(newAngle < 0) {
+              newAngle -= 2 * Math.PI;
+            }
+
+            Animated.timing(new Animated.Value(startAngle), {
+              toValue: newAngle,
+              duration: 0,
+              useNativeDriver: false,
+            }).start(() => {
+              setStartAngle(newAngle);
+            });
+          },
+        },
+      ),
+    });
 
   // Hook
   useEffect(() => {
-    // Pan Responders
-    setPanResponderBed(
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (evt, gestureState) => true,
-        onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-        onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-        onPanResponderMove: (evt, { moveX, moveY }) => {
-          const currentAngleStop = (startAngle + angleLength) % (2 * Math.PI);
-          let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI / 2;
-
-          if (newAngle < 0) {
-            newAngle += 2 * Math.PI;
-          }
-
-          let newAngleLength = (currentAngleStop - newAngle) % (2 * Math.PI);
-
-          if (newAngleLength < 0) {
-            newAngleLength += 2 * Math.PI;
-          }
-
-          setStartAngle(newAngle);
-          setAngleLength(newAngleLength);
-        },
-      })
-    );
-
-    setPanResponderBell(
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (evt, gestureState) => true,
-        onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-        onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-        onPanResponderMove: (evt, { moveX, moveY }) => {
-          let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI/2;
-          let newAngleLength = (newAngle - startAngle) % (2 * Math.PI);
-
-          if (newAngleLength < 0) {
-            newAngleLength += 2 * Math.PI;
-          }
-
-          setStartAngle(startAngle);
-          setAngleLength(newAngleLength);
-        },
-      })
-    );
-
-    setPanResponderDifference(
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (evt, gestureState) => true,
-        onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-        onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-        onPanResponderMove: (evt, { moveX, moveY }) => {
-          let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI/2;
-
-          if (newAngle < 0) {
-            newAngle += 2 * Math.PI;
-          }
-
-          setStartAngle(newAngle);
-          setAngleLength(angleLength);
-        },
-      })
-    );
-
-    
     // PROGRESS AND OFFSET LAYER CHANGES
     const startAngleDegree = Math.round((startAngle * 360) / (Math.PI * 2));
     const angleLengthDegree = Math.round((angleLength * 360) / (Math.PI * 2));
     const angleLengthPercentage = Math.round((angleLength * 100) / (Math.PI * 2));
     setPercent(angleLengthPercentage);
     if(angleLengthPercentage > 50) {
-      setProgressLayer(progressLayerBaseValue + startAngleDegree);
-      setOffsetLayer(offsetLayerBaseValue + angleLengthDegree + startAngleDegree);
+      setProgressLayer((progressLayerBaseValue + startAngleDegree) % 360);
+      setOffsetLayer((offsetLayerBaseValue + angleLengthDegree + startAngleDegree) % 360);
     } else {
-      setProgressLayer(progressLayerBaseValue + angleLengthDegree + startAngleDegree + 180);
-      setOffsetLayer(offsetLayerBaseValue + startAngleDegree);
+      setProgressLayer((progressLayerBaseValue + angleLengthDegree + startAngleDegree + 180) % 360);
+      setOffsetLayer((offsetLayerBaseValue + startAngleDegree) % 360);
     }
 
     // Updating Bed time, Wake up time, time difference and sleep goal matched
@@ -186,14 +203,14 @@
       .toString();
   };
 
+  const onLayout = () => setCircleCenter();
+
   const setCircleCenter = () => {
-    if (circleRef?.current)
+    if(circleRef?.current)
       circleRef.current.measure((x, y, w, h, px, py) => {
-        if (px && py) {
-          const halfOfContainer = (iconSize + outerCircleSize + 2) / 2;
-          setCircleCenterX(px + halfOfContainer);
-          setCircleCenterY(py + halfOfContainer);
-        }
+        if(px >= 0 && py >= 0)
+          setCircleCenterX(px + clockCircleBorderRadius);
+          setCircleCenterY(py + clockCircleBorderRadius);
       });
   }
 
@@ -216,12 +233,12 @@
   }
 
   const sleepGoalMatched = () => {
-    if (timeDifference) {
-      if (timeDifference.split(' ').length === 4) {
+    if(timeDifference) {
+      if(timeDifference.split(' ').length === 4) {
         const startRangeInMinutes = parseInt(startRange, 10) * 60;
         const endRangeInMinutes = parseInt(endRange, 10) * 60;
         const timeDifferenceInMinutes = parseInt(timeDifference.split(' ')[0], 10) * 60 + parseInt(timeDifference.split(' ')[2], 10);
-        if (timeDifferenceInMinutes >= startRangeInMinutes
+        if(timeDifferenceInMinutes >= startRangeInMinutes
           && timeDifferenceInMinutes <= endRangeInMinutes) {
             setSleepGoalMatched(true);
             setSleepGoalColorMatched('#262427');
@@ -368,7 +385,7 @@
             borderRadius: outerCircleBorderRadius,
             transform: [{rotateZ: `${progressLayer}deg`}],
             }}
-            {...panResponderDiffernce.panHandlers}
+            {...panResponderDifference.panHandlers}
         />
 
         {/* Offset Layer */}
@@ -382,8 +399,8 @@
             borderRadius: outerCircleBorderRadius,
             transform: [{rotateZ: `${offsetLayer}deg`}],
             }}
-            {...panResponderDiffernce.panHandlers}
-        />
+            {...panResponderDifference.panHandlers}
+        /> 
 
         {/* Clock Outer Rotating Lines */}
         {Array(90).fill(0).map((item, index) => (
@@ -392,12 +409,12 @@
             style={{
                 ...styles.clockOuterDotsContainer,
                 transform: [{
-                rotateZ: `${index * 2}deg`,
+                  rotateZ: `${index * 2}deg`,
                 }],
             }}
             >
-            <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
-            <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
+              <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
+              <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
             </View>
         ))}
     </>
@@ -412,10 +429,10 @@
             borderRadius: iconSize + deviceWidth * 0.023,
             transform: [
                 {
-                    translateX: calculateArcCircle().fromX,
+                  translateX: calculateArcCircle().fromX,
                 },
                 {
-                    translateY: calculateArcCircle().fromY,
+                  translateY: calculateArcCircle().fromY,
                 }
             ],
             }}
@@ -432,10 +449,10 @@
             borderRadius: deviceWidth * 0.05 + deviceWidth * 0.023,
             transform: [
                 {
-                    translateX: calculateArcCircle(). toX,
+                  translateX: calculateArcCircle().toX,
                 },
                 {
-                    translateY: calculateArcCircle(). toY
+                  translateY: calculateArcCircle().toY,
                 }
             ],
             }}
@@ -460,7 +477,7 @@
                 ...styles.clockInnerDotsContainer,
                 ...styles.contentAlignCenterWithSelfAlign,
                 transform: [{
-                rotateZ: `${index * 3}deg`,
+                  rotateZ: `${index * 3}deg`,
                 }],
             }}>
                 <View style={styles.clockInnerDotsWrapper}>
@@ -552,32 +569,48 @@
   );
 
   const alarmClockComponent = () => (
-    <View style={styles.clockCircle}>
-        <View style={{
-                ...styles.contentAlignCenter,
-                height: outerCircleSize,
-                width: outerCircleSize,
-                borderRadius: outerCircleBorderRadius,
+    <View
+      style={{
+        ...styles.clockCircle,
+        height: clockCircleSize,
+        width: clockCircleSize,
+        borderRadius: clockCircleBorderRadius,
+      }}
+      onLayout={onLayout}
+    >
+      <View 
+        style={{
+          ...styles.clockCircle,
+          height: clockCircleSize,
+          width: clockCircleSize,
+          borderRadius: clockCircleBorderRadius,
+        }}
+        ref={circleRef}
+      >
+          <View style={{
+              ...styles.contentAlignCenter,
+              height: outerCircleSize,
+              width: outerCircleSize,
+              borderRadius: outerCircleBorderRadius,
             }}
-            collapsable={false}
-            ref={circleRef}
-        >
-            {/* Icon Difference */}
-            {iconDifferenceWithRotatingLines()}
+          >
+              {/* Icon Difference */}
+              {iconDifferenceWithRotatingLines()}
 
-            {/* ROTATING ICONS */}
-            {rotatingIcons()}
+              {/* ROTATING ICONS */}
+              {rotatingIcons()}
 
-            {/* Clock Layout */}
-            {clockLayout()}
-        </View>
+              {/* Clock Layout */}
+              {clockLayout()}
+          </View>
+      </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      <Text style={styles.titleText}>{screenHeading}</Text>
+      <Text style={styles.titleText}>{alarmScreenHeading}</Text>
 
       {/* ALARM CLOCK */}
       {!modalVisible && (
