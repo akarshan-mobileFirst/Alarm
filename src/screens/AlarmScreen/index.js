@@ -1,4 +1,4 @@
- import React, { useLayoutEffect, useState, useRef } from 'react';
+ import React, { useLayoutEffect, useState, useRef, useReducer } from 'react';
  import {
    View,
    Text,
@@ -21,8 +21,7 @@
  // File Imports
  import styles from './styles';
  import Constants from '../../utils/constants';
- 
- const AlarmScreen = () => {  
+
   // Constants
   const { clockConstants, dimensions, messages, screenHeadings } = Constants;
   const {
@@ -41,31 +40,105 @@
   const { meetSleepGoalMessage, notMeetSleepGoalMessage } = messages;
   const { alarmScreenHeading } = screenHeadings;
 
+ // Intial State and Reducer
+ const initState = {
+  startAngle: 0,
+  angleLength: Math.PI,
+  angleDifference: 0,
+  bedTime: "12:00 AM",
+  wakeUpTime: "12:00 PM",
+  hoursDifference: 12,
+  minutesDifference: 0,
+  isSleepGoalMatched: false,
+  outerLinesColor: 'rgba(0, 0, 0, 0.15)',
+  sleepGoalColorMatched: '#CA7F22',
+  sleepGoalIconColorMatched: '#72260A',
+  percent: 50,
+  progressLayer: progressLayerBaseValue,
+  offsetLayer: offsetLayerBaseValue,
+  circleCenterX: 0,
+  circleCenterY: 0,
+  modalVisible: false,
+  startRange: '7',
+  endRange: '8',
+ };
+
+ const reducer = (state, action) => {
+  switch(action.type) {
+    case "StartAngle":
+      return { ...state, startAngle: action.payload };
+    case "AngleLength":
+      return { ...state, angleLength: action.payload };
+    case "AngleDifference":
+      return { ...state, angleDifference: action.payload };
+    case "BedTime":
+      return { ...state, bedTime: action.payload };
+    case "WakeUpTime":
+      return { ...state, wakeUpTime: action.payload };
+    case "HoursDifference":
+      return { ...state, hoursDifference: action.payload };
+    case "MinutesDifference":
+      return { ...state, minutesDifference: action.payload };
+    case "IsSleepGoalMatched":
+      return { ...state, isSleepGoalMatched: action.payload };
+    case "OuterLinesColor":
+      return { ...state, outerLinesColor: action.payload };
+    case "SleepGoalColorMatched":
+      return { ...state, sleepGoalColorMatched: action.payload };
+    case "SleepGoalIconColorMatched":
+      return { ...state, sleepGoalIconColorMatched: action.payload };
+    case "Percent":
+      return { ...state, percent: action.payload };
+    case "ProgressLayer":
+      return { ...state, progressLayer: action.payload };
+    case "OffsetLayer":
+      return { ...state, offsetLayer: action.payload };
+    case "CircleCenterX":
+      return { ...state, circleCenterX: action.payload };
+    case "CircleCenterY":
+      return { ...state, circleCenterY: action.payload };
+    case "ModalVisible":
+      return { ...state, modalVisible: action.payload };
+    case "StartRange":
+      return { ...state, startRange: action.payload };
+    case "EndRange":
+      return { ...state, endRange: action.payload };
+    default:
+      return state;
+  }
+ }
+ 
+ const AlarmScreen = () => {
   // Ref
   const circleRef = useRef();
 
   // States
-  const [startAngle, setStartAngle] = useState(0);
-  const [angleLength, setAngleLength] = useState(Math.PI);
-  const [angleDifference, setAngleDifference] = useState(0);
-  const [bedTime, setBedTime] = useState("12:00 AM");
-  const [wakeUpTime, setWakeUpTime] = useState("12:00 PM");
-  const [hoursDifference, setHoursDifference] = useState(12);
-  const [minutesDifference, setMinutesDifference] = useState(0);
-  const [isSleepGoalMatched, setSleepGoalMatched] = useState(false);
-  const [outerLinesColor, setOuterLinesColor] = useState('rgba(0, 0, 0, 0.15)');
-  const [sleepGoalColorMatched, setSleepGoalColorMatched] = useState('#CA7F22');
-  const [sleepGoalIconColorMatched, setSleepGoalIconColorMatched] = useState('#72260A');
-  const [percent, setPercent] = useState(50);
-  const [progressLayer, setProgressLayer] = useState(progressLayerBaseValue);
-  const [offsetLayer, setOffsetLayer] = useState(offsetLayerBaseValue);
-  const [circleCenterX, setCircleCenterX] = useState(0);
-  const [circleCenterY, setCircleCenterY] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [startRange, setStartRange] = useState('7');
-  const [endRange, setEndRange] = useState('8');
   const [startRangeInput, setStartRangeInput] = useState('7');
   const [endRangeInput, setEndRangeInput] = useState('8');
+
+  // UseReducer
+  const [state, dispatch] = useReducer(reducer, initState);
+  const {
+    startAngle,
+    angleLength,
+    angleDifference,
+    bedTime,
+    wakeUpTime,
+    hoursDifference,
+    minutesDifference,
+    isSleepGoalMatched,
+    outerLinesColor,
+    sleepGoalColorMatched,
+    sleepGoalIconColorMatched,
+    percent,
+    progressLayer,
+    offsetLayer,
+    circleCenterX,
+    circleCenterY,
+    modalVisible,
+    startRange,
+    endRange,
+  } = state;
   
   // Pan Responders
   const panResponderBed =
@@ -90,9 +163,8 @@
               newAngleLength += 2 * Math.PI;
             }
 
-            setStartAngle(newAngle);
-            setAngleLength(newAngleLength);
-            
+            dispatch({ type: "StartAngle", payload: newAngle });
+            dispatch({ type: "AngleLength", payload: newAngleLength });
           },
         },
       ),
@@ -113,7 +185,7 @@
               newAngleLength += 2 * Math.PI;
             }
 
-            setAngleLength(newAngleLength);
+            dispatch({ type: "AngleLength", payload: newAngleLength });
           },
         },
       ),
@@ -130,7 +202,7 @@
         }
 
         angDiff -= startAngle;
-        setAngleDifference(angDiff);
+        dispatch({ type: "AngleDifference", payload: angDiff });
       },
       onPanResponderMove: Animated.event(
         [],
@@ -143,7 +215,7 @@
               newAngle -= 2 * Math.PI;
             }
 
-            setStartAngle(newAngle);
+            dispatch({ type: "StartAngle", payload: newAngle });
           },
         },
       ),
@@ -155,25 +227,23 @@
     const startAngleDegree = Math.round((startAngle * 360) / (Math.PI * 2));
     const angleLengthDegree = Math.round((angleLength * 360) / (Math.PI * 2));
     const angleLengthPercentage = Math.round((angleLength * 100) / (Math.PI * 2));
-    setPercent(angleLengthPercentage);
+    dispatch({ type: "Percent", payload: angleLengthPercentage });
     if(angleLengthPercentage > 50) {
-      setProgressLayer((progressLayerBaseValue + startAngleDegree) % 360);
-      setOffsetLayer((offsetLayerBaseValue + angleLengthDegree + startAngleDegree) % 360);
+      dispatch({ type: "ProgressLayer", payload: (progressLayerBaseValue + startAngleDegree) % 360 });
+      dispatch({ type: "OffsetLayer", payload: (offsetLayerBaseValue + angleLengthDegree + startAngleDegree) % 360 });
     } else {
-      setProgressLayer((progressLayerBaseValue + angleLengthDegree + startAngleDegree + 180) % 360);
-      setOffsetLayer((offsetLayerBaseValue + startAngleDegree) % 360);
+      dispatch({ type: "ProgressLayer", payload: (progressLayerBaseValue + angleLengthDegree + startAngleDegree + 180) % 360 });
+      dispatch({ type: "OffsetLayer", payload: (offsetLayerBaseValue + startAngleDegree) % 360 });
     }
 
     // Updating Bed time, Wake up time, time difference and sleep goal matched
-    setBedTime(calculateTimeFromAngle(startAngle));
-    setWakeUpTime(
-      calculateTimeFromAngle((startAngle + angleLength) % (2 * Math.PI)),
-    );
+    dispatch({ type: "BedTime", payload: calculateTimeFromAngle(startAngle) });
+    dispatch({ type: "WakeUpTime", payload: calculateTimeFromAngle((startAngle + angleLength) % (2 * Math.PI)) });
     const minutesLong = calculateMinutesFromAngle(angleLength);
     const hours = Math.floor(minutesLong / 60);
     const minutes = Math.round(minutesLong - hours * 60);
-    setHoursDifference(hours);
-    setMinutesDifference(minutes);
+    dispatch({ type: "HoursDifference", payload: hours });
+    dispatch({ type: "MinutesDifference", payload: minutes });
     sleepGoalMatched();
   }, [startAngle, angleLength]);
   
@@ -195,9 +265,10 @@
   const setCircleCenter = () => {
     if(circleRef?.current)
       circleRef.current.measure((x, y, w, h, px, py) => {
-        if(px >= 0 && py >= 0)
-          setCircleCenterX(px + clockCircleBorderRadius);
-          setCircleCenterY(py + clockCircleBorderRadius);
+        if(px >= 0 && py >= 0) {
+          dispatch({ type: "CircleCenterX", payload: px + clockCircleBorderRadius });
+          dispatch({ type: "CircleCenterY", payload: py + clockCircleBorderRadius });
+        }
       });
   }
 
@@ -226,17 +297,17 @@
       const totalTimeDifferenceInMinutes = hoursDifference * 60 + minutesDifference;
       if(totalTimeDifferenceInMinutes >= startRangeInMinutes
         && totalTimeDifferenceInMinutes <= endRangeInMinutes) {
-          setSleepGoalMatched(true);
-          setSleepGoalColorMatched('#262427');
-          setSleepGoalIconColorMatched('#727277');
-          setOuterLinesColor('#000000');
+          dispatch({ type: "IsSleepGoalMatched", payload: true });
+          dispatch({ type: "SleepGoalColorMatched", payload: '#262427' });
+          dispatch({ type: "SleepGoalIconColorMatched", payload: '#727277' });
+          dispatch({ type: "OuterLinesColor", payload: '#000000' });
           return;
       }
     }
-    setSleepGoalMatched(false);
-    setSleepGoalColorMatched('#CA7F22');
-    setSleepGoalIconColorMatched('#72260A');
-    setOuterLinesColor('rgba(0, 0, 0, 0.15)');
+    dispatch({ type: "IsSleepGoalMatched", payload: false });
+    dispatch({ type: "SleepGoalColorMatched", payload: '#CA7F22' });
+    dispatch({ type: "SleepGoalIconColorMatched", payload:'#72260A' });
+    dispatch({ type: "OuterLinesColor", payload: 'rgba(0, 0, 0, 0.15)' });
   };
 
   const timeHeading = () => (
@@ -278,7 +349,7 @@
           <Text style={styles.goalHeading}>Daily Sleep Goal</Text>
           <TouchableOpacity activeOpacity={0.9}
             onPress={() => {
-              setModalVisible(true);
+              dispatch({ type: "ModalVisible", payload: true });
               setStartRangeInput(startRange);
               setEndRangeInput(endRange);
             }}
@@ -296,12 +367,12 @@
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
-        setModalVisible(false);
+          dispatch({ type: "ModalVisible", payload: false });
         }}
     >
         <View style={styles.dailySleepGoalModalContainer}>
         <View style={styles.modalHeadingContainer}>
-            <TouchableOpacity activeOpacity={0.9} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity activeOpacity={0.9} onPress={() => dispatch({ type: "ModalVisible", payload: false })}>
             <Ionicons name="ios-close-sharp" size={30} color="#FF5733" />
             </TouchableOpacity>
             <Text style={styles.modalHeading}>Sleep Goal</Text>
@@ -311,9 +382,9 @@
                     const startRangeValue = parseInt(startRangeInput, 10);
                     const endRangeValue = parseInt(endRangeInput, 10);
                     if(startRangeValue > 0 && startRangeValue < 24 && endRangeValue > 1 && endRangeValue < 25 && endRangeValue > startRangeValue) {
-                        setModalVisible(false);
-                        setStartRange(startRangeInput);
-                        setEndRange(endRangeInput);
+                        dispatch({ type: "ModalVisible", payload: false });
+                        dispatch({ type: "StartRange", payload: startRangeInput });
+                        dispatch({ type: "EndRange", payload: endRangeInput });
                     } else {
                         Alert.alert("Warning", "Please enter a value sleep goal range.")
                     }
