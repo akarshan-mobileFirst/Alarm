@@ -1,4 +1,4 @@
- import React, { useEffect, useState, useRef } from 'react';
+ import React, { useLayoutEffect, useState, useRef, useReducer } from 'react';
  import {
    View,
    Text,
@@ -18,164 +18,238 @@
  import Octicons from 'react-native-vector-icons/Octicons';
  import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
  
- // File Inports
+ // File Imports
  import styles from './styles';
  import Constants from '../../utils/constants';
- 
- const AlarmScreen = () => {  
+
   // Constants
-  const { deviceWidth, meetSleepGoalMessage, notMeetSleepGoalMessage } = Constants;
-  const screenHeading = "Change Wake Up";
-  const progressLayerBaseValue = 45;
-  const offsetLayerBaseValue = -135;
-  const outerCircleSize = deviceWidth * 0.77;
-  const outerCircleBorderRadius = outerCircleSize / 2;
-  const clockFaceCircleSize = deviceWidth * 0.55;
-  const iconSize = deviceWidth * 0.053;
-  const radius = outerCircleBorderRadius - iconSize + 1; // Circle Radius - Icon Size
+  const { clockConstants, dimensions, messages, screenHeadings } = Constants;
+  const {
+    clockCircleBorderRadius,
+    clockCircleSize,
+    clockFaceCircleSize,
+    iconPadding,
+    iconRotationCircleBorderRadius,
+    iconRotationCircleSize,
+    iconSize,
+    offsetLayerBaseValue,
+    progressLayerBaseValue,
+    radius,
+  } = clockConstants;
+  const { deviceWidth } = dimensions;
+  const { meetSleepGoalMessage, notMeetSleepGoalMessage } = messages;
+  const { alarmScreenHeading } = screenHeadings;
 
+ // Intial State and Reducer
+ const initState = {
+  startAngle: 0,
+  angleLength: Math.PI,
+  angleDifference: 0,
+  bedTime: "12:00 AM",
+  wakeUpTime: "12:00 PM",
+  hoursDifference: 12,
+  minutesDifference: 0,
+  isSleepGoalMatched: false,
+  outerLinesColor: 'rgba(0, 0, 0, 0.15)',
+  sleepGoalColorMatched: '#CA7F22',
+  sleepGoalIconColorMatched: '#72260A',
+  percent: 50,
+  progressLayer: progressLayerBaseValue,
+  offsetLayer: offsetLayerBaseValue,
+  circleCenterX: 0,
+  circleCenterY: 0,
+  modalVisible: false,
+  startRange: '7',
+  endRange: '8',
+ };
+
+ const reducer = (state, action) => {
+  switch(action.type) {
+    case "StartAngle":
+      return { ...state, startAngle: action.payload };
+    case "AngleLength":
+      return { ...state, angleLength: action.payload };
+    case "AngleDifference":
+      return { ...state, angleDifference: action.payload };
+    case "BedTime":
+      return { ...state, bedTime: action.payload };
+    case "WakeUpTime":
+      return { ...state, wakeUpTime: action.payload };
+    case "HoursDifference":
+      return { ...state, hoursDifference: action.payload };
+    case "MinutesDifference":
+      return { ...state, minutesDifference: action.payload };
+    case "IsSleepGoalMatched":
+      return { ...state, isSleepGoalMatched: action.payload };
+    case "OuterLinesColor":
+      return { ...state, outerLinesColor: action.payload };
+    case "SleepGoalColorMatched":
+      return { ...state, sleepGoalColorMatched: action.payload };
+    case "SleepGoalIconColorMatched":
+      return { ...state, sleepGoalIconColorMatched: action.payload };
+    case "Percent":
+      return { ...state, percent: action.payload };
+    case "ProgressLayer":
+      return { ...state, progressLayer: action.payload };
+    case "OffsetLayer":
+      return { ...state, offsetLayer: action.payload };
+    case "CircleCenterX":
+      return { ...state, circleCenterX: action.payload };
+    case "CircleCenterY":
+      return { ...state, circleCenterY: action.payload };
+    case "ModalVisible":
+      return { ...state, modalVisible: action.payload };
+    case "StartRange":
+      return { ...state, startRange: action.payload };
+    case "EndRange":
+      return { ...state, endRange: action.payload };
+    default:
+      return state;
+  }
+ }
+ 
+ const AlarmScreen = () => {
   // Ref
-  const circleRef = useRef(null);
+  const circleRef = useRef();
 
-  // State
-  const [startAngle, setStartAngle] = useState(0);
-  const [angleLength, setAngleLength] = useState(3.15);
-  const [bedTime, setBedTime] = useState("12:00 AM");
-  const [wakeUpTime, setWakeUpTime] = useState("12:00 PM");
-  const [timeDifference, setTimeDifference] = useState("12 hr 0 min");
-  const [isSleepGoalMatched, setSleepGoalMatched] = useState(false);
-  const [outerLinesColor, setOuterLinesColor] = useState('rgba(0, 0, 0, 0.15)');
-  const [sleepGoalColorMatched, setSleepGoalColorMatched] = useState('#CA7F22');
-  const [sleepGoalIconColorMatched, setSleepGoalIconColorMatched] = useState('#72260A');
-  const [percent, setPercent] = useState(50);
-  const [progressLayer, setProgressLayer] = useState(progressLayerBaseValue);
-  const [offsetLayer, setOffsetLayer] = useState(offsetLayerBaseValue);
-  const [circleCenterX, setCircleCenterX] = useState(0);
-  const [circleCenterY, setCircleCenterY] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [startRange, setStartRange] = useState('7');
-  const [endRange, setEndRange] = useState('8');
+  // States
   const [startRangeInput, setStartRangeInput] = useState('7');
   const [endRangeInput, setEndRangeInput] = useState('8');
-  const [panResponderBed, setPanResponderBed] = useState(
+
+  // UseReducer
+  const [state, dispatch] = useReducer(reducer, initState);
+  const {
+    startAngle,
+    angleLength,
+    angleDifference,
+    bedTime,
+    wakeUpTime,
+    hoursDifference,
+    minutesDifference,
+    isSleepGoalMatched,
+    outerLinesColor,
+    sleepGoalColorMatched,
+    sleepGoalIconColorMatched,
+    percent,
+    progressLayer,
+    offsetLayer,
+    circleCenterX,
+    circleCenterY,
+    modalVisible,
+    startRange,
+    endRange,
+  } = state;
+  
+  // Pan Responders
+  const panResponderBed =
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-      onPanResponderMove: (evt, gestureState) => {},
-    })
-  );
-  const [panResponderBell, setPanResponderBell] = useState(
+      onPanResponderMove: Animated.event(
+        [],
+        {
+          useNativeDriver: false,
+          listener: (evt, { moveX, moveY }) => {
+            const currentAngleStop = (startAngle + angleLength) % (2 * Math.PI);
+            let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI / 2;
+
+            if(newAngle < 0) {
+              newAngle += 2 * Math.PI;
+            }
+
+            let newAngleLength = (currentAngleStop - newAngle) % (2 * Math.PI);
+
+            if(newAngleLength < 0) {
+              newAngleLength += 2 * Math.PI;
+            }
+
+            dispatch({ type: "StartAngle", payload: newAngle });
+            dispatch({ type: "AngleLength", payload: newAngleLength });
+          },
+        },
+      ),
+    });
+  const panResponderBell = 
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-      onPanResponderMove: (evt, gestureState) => {},
-    })
-  );
-  const [panResponderDiffernce, setPanResponderDifference] = useState(
+      onPanResponderMove: Animated.event(
+        [],
+        {
+          useNativeDriver: false,
+          listener: (evt, { moveX, moveY }) => {
+            const newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI / 2;
+            let newAngleLength = (newAngle - startAngle) % (2 * Math.PI);
+
+            if(newAngleLength < 0) {
+              newAngleLength += 2 * Math.PI;
+            }
+
+            dispatch({ type: "AngleLength", payload: newAngleLength });
+          },
+        },
+      ),
+    });
+  const panResponderDifference = 
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-      onPanResponderMove: (evt, gestureState) => {},
-    })
-  );
+      onPanResponderGrant: (evt, { moveX, moveY }) => {
+        let angDiff = Math.atan2(moveY - circleCenterY, moveX - circleCenterX);
+        
+        if(angDiff < 0) {
+          angDiff -= 2 * Math.PI;
+        }
+
+        angDiff -= startAngle;
+        dispatch({ type: "AngleDifference", payload: angDiff });
+      },
+      onPanResponderMove: Animated.event(
+        [],
+        {
+          useNativeDriver: false,
+          listener: (evt, { moveX, moveY }) => {
+            let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) - angleDifference;
+            
+            if(newAngle < 0) {
+              newAngle -= 2 * Math.PI;
+            }
+
+            dispatch({ type: "StartAngle", payload: newAngle });
+          },
+        },
+      ),
+    });
 
   // Hook
-  useEffect(() => {
-    // Pan Responders
-    setPanResponderBed(
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (evt, gestureState) => true,
-        onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-        onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-        onPanResponderMove: (evt, { moveX, moveY }) => {
-          const currentAngleStop = (startAngle + angleLength) % (2 * Math.PI);
-          let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI / 2;
-
-          if (newAngle < 0) {
-            newAngle += 2 * Math.PI;
-          }
-
-          let newAngleLength = (currentAngleStop - newAngle) % (2 * Math.PI);
-
-          if (newAngleLength < 0) {
-            newAngleLength += 2 * Math.PI;
-          }
-
-          setStartAngle(newAngle);
-          setAngleLength(newAngleLength);
-        },
-      })
-    );
-
-    setPanResponderBell(
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (evt, gestureState) => true,
-        onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-        onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-        onPanResponderMove: (evt, { moveX, moveY }) => {
-          let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI/2;
-          let newAngleLength = (newAngle - startAngle) % (2 * Math.PI);
-
-          if (newAngleLength < 0) {
-            newAngleLength += 2 * Math.PI;
-          }
-
-          setStartAngle(startAngle);
-          setAngleLength(newAngleLength);
-        },
-      })
-    );
-
-    setPanResponderDifference(
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (evt, gestureState) => true,
-        onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-        onPanResponderGrant: (evt, gestureState) => setCircleCenter(),
-        onPanResponderMove: (evt, { moveX, moveY }) => {
-          let newAngle = Math.atan2(moveY - circleCenterY, moveX - circleCenterX) + Math.PI/2;
-
-          if (newAngle < 0) {
-            newAngle += 2 * Math.PI;
-          }
-
-          setStartAngle(newAngle);
-          setAngleLength(angleLength);
-        },
-      })
-    );
-
-    
+  useLayoutEffect(() => {
     // PROGRESS AND OFFSET LAYER CHANGES
     const startAngleDegree = Math.round((startAngle * 360) / (Math.PI * 2));
     const angleLengthDegree = Math.round((angleLength * 360) / (Math.PI * 2));
     const angleLengthPercentage = Math.round((angleLength * 100) / (Math.PI * 2));
-    setPercent(angleLengthPercentage);
+    dispatch({ type: "Percent", payload: angleLengthPercentage });
     if(angleLengthPercentage > 50) {
-      setProgressLayer(progressLayerBaseValue + startAngleDegree);
-      setOffsetLayer(offsetLayerBaseValue + angleLengthDegree + startAngleDegree);
+      dispatch({ type: "ProgressLayer", payload: (progressLayerBaseValue + startAngleDegree) % 360 });
+      dispatch({ type: "OffsetLayer", payload: (offsetLayerBaseValue + angleLengthDegree + startAngleDegree) % 360 });
     } else {
-      setProgressLayer(progressLayerBaseValue + angleLengthDegree + startAngleDegree + 180);
-      setOffsetLayer(offsetLayerBaseValue + startAngleDegree);
+      dispatch({ type: "ProgressLayer", payload: (progressLayerBaseValue + angleLengthDegree + startAngleDegree + 180) % 360 });
+      dispatch({ type: "OffsetLayer", payload: (offsetLayerBaseValue + startAngleDegree) % 360 });
     }
 
     // Updating Bed time, Wake up time, time difference and sleep goal matched
-    setBedTime(calculateTimeFromAngle(startAngle));
-    setWakeUpTime(
-      calculateTimeFromAngle((startAngle + angleLength) % (2 * Math.PI)),
-    );
+    dispatch({ type: "BedTime", payload: calculateTimeFromAngle(startAngle) });
+    dispatch({ type: "WakeUpTime", payload: calculateTimeFromAngle((startAngle + angleLength) % (2 * Math.PI)) });
     const minutesLong = calculateMinutesFromAngle(angleLength);
     const hours = Math.floor(minutesLong / 60);
-    const minutes = minutesLong - hours * 60;
-    setTimeDifference(`${hours} hr ${minutes} min`);
+    const minutes = Math.round(minutesLong - hours * 60);
+    dispatch({ type: "HoursDifference", payload: hours });
+    dispatch({ type: "MinutesDifference", payload: minutes });
     sleepGoalMatched();
   }, [startAngle, angleLength]);
   
   // Methods
   const calculateMinutesFromAngle = angle =>
-    Math.round(angle / ((2 * Math.PI) / (12 * 12))) * 5 * 2;
+    (angle / ((2 * Math.PI) / (12 * 12))) * 5 * 2;
 
   const calculateTimeFromAngle = angle => {
     const minutes = calculateMinutesFromAngle(angle);
@@ -186,13 +260,14 @@
       .toString();
   };
 
+  const onLayout = () => setCircleCenter();
+
   const setCircleCenter = () => {
-    if (circleRef?.current)
+    if(circleRef?.current)
       circleRef.current.measure((x, y, w, h, px, py) => {
-        if (px && py) {
-          const halfOfContainer = (iconSize + outerCircleSize + 2) / 2;
-          setCircleCenterX(px + halfOfContainer);
-          setCircleCenterY(py + halfOfContainer);
+        if(px >= 0 && py >= 0) {
+          dispatch({ type: "CircleCenterX", payload: px + clockCircleBorderRadius });
+          dispatch({ type: "CircleCenterY", payload: py + clockCircleBorderRadius });
         }
       });
   }
@@ -216,25 +291,23 @@
   }
 
   const sleepGoalMatched = () => {
-    if (timeDifference) {
-      if (timeDifference.split(' ').length === 4) {
-        const startRangeInMinutes = parseInt(startRange, 10) * 60;
-        const endRangeInMinutes = parseInt(endRange, 10) * 60;
-        const timeDifferenceInMinutes = parseInt(timeDifference.split(' ')[0], 10) * 60 + parseInt(timeDifference.split(' ')[2], 10);
-        if (timeDifferenceInMinutes >= startRangeInMinutes
-          && timeDifferenceInMinutes <= endRangeInMinutes) {
-            setSleepGoalMatched(true);
-            setSleepGoalColorMatched('#262427');
-            setSleepGoalIconColorMatched('#727277');
-            setOuterLinesColor('#000000');
-            return;
-        }
+    if(hoursDifference >= 0 && minutesDifference >= 0) {
+      const startRangeInMinutes = parseInt(startRange, 10) * 60;
+      const endRangeInMinutes = parseInt(endRange, 10) * 60;
+      const totalTimeDifferenceInMinutes = hoursDifference * 60 + minutesDifference;
+      if(totalTimeDifferenceInMinutes >= startRangeInMinutes
+        && totalTimeDifferenceInMinutes <= endRangeInMinutes) {
+          dispatch({ type: "IsSleepGoalMatched", payload: true });
+          dispatch({ type: "SleepGoalColorMatched", payload: '#262427' });
+          dispatch({ type: "SleepGoalIconColorMatched", payload: '#727277' });
+          dispatch({ type: "OuterLinesColor", payload: '#000000' });
+          return;
       }
     }
-    setSleepGoalMatched(false);
-    setSleepGoalColorMatched('#CA7F22');
-    setSleepGoalIconColorMatched('#72260A');
-    setOuterLinesColor('rgba(0, 0, 0, 0.15)');
+    dispatch({ type: "IsSleepGoalMatched", payload: false });
+    dispatch({ type: "SleepGoalColorMatched", payload: '#CA7F22' });
+    dispatch({ type: "SleepGoalIconColorMatched", payload:'#72260A' });
+    dispatch({ type: "OuterLinesColor", payload: 'rgba(0, 0, 0, 0.15)' });
   };
 
   const timeHeading = () => (
@@ -260,7 +333,7 @@
 
   const alarmFooter = () => (
     <>
-        <Text style={styles.totalTimeText}>{timeDifference}</Text>
+        <Text style={styles.totalTimeText}>{`${hoursDifference} hr ${minutesDifference} min`}</Text>
         {!isSleepGoalMatched
           ? <View style={styles.messageContainer}>
               <View style={styles.info}>
@@ -276,7 +349,7 @@
           <Text style={styles.goalHeading}>Daily Sleep Goal</Text>
           <TouchableOpacity activeOpacity={0.9}
             onPress={() => {
-              setModalVisible(true);
+              dispatch({ type: "ModalVisible", payload: true });
               setStartRangeInput(startRange);
               setEndRangeInput(endRange);
             }}
@@ -294,12 +367,12 @@
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
-        setModalVisible(false);
+          dispatch({ type: "ModalVisible", payload: false });
         }}
     >
         <View style={styles.dailySleepGoalModalContainer}>
         <View style={styles.modalHeadingContainer}>
-            <TouchableOpacity activeOpacity={0.9} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity activeOpacity={0.9} onPress={() => dispatch({ type: "ModalVisible", payload: false })}>
             <Ionicons name="ios-close-sharp" size={30} color="#FF5733" />
             </TouchableOpacity>
             <Text style={styles.modalHeading}>Sleep Goal</Text>
@@ -309,9 +382,9 @@
                     const startRangeValue = parseInt(startRangeInput, 10);
                     const endRangeValue = parseInt(endRangeInput, 10);
                     if(startRangeValue > 0 && startRangeValue < 24 && endRangeValue > 1 && endRangeValue < 25 && endRangeValue > startRangeValue) {
-                        setModalVisible(false);
-                        setStartRange(startRangeInput);
-                        setEndRange(endRangeInput);
+                        dispatch({ type: "ModalVisible", payload: false });
+                        dispatch({ type: "StartRange", payload: startRangeInput });
+                        dispatch({ type: "EndRange", payload: endRangeInput });
                     } else {
                         Alert.alert("Warning", "Please enter a value sleep goal range.")
                     }
@@ -362,13 +435,13 @@
             ...styles.progressOffsetLayer,
             borderRightColor: sleepGoalColorMatched,
             borderTopColor: sleepGoalColorMatched,
-            borderWidth: iconSize + deviceWidth * 0.023 * 2,
-            height: outerCircleSize,
-            width: outerCircleSize,
-            borderRadius: outerCircleBorderRadius,
+            borderWidth: iconSize + iconPadding * 2,
+            height: iconRotationCircleSize,
+            width: iconRotationCircleSize,
+            borderRadius: iconRotationCircleBorderRadius,
             transform: [{rotateZ: `${progressLayer}deg`}],
             }}
-            {...panResponderDiffernce.panHandlers}
+            {...panResponderDifference.panHandlers}
         />
 
         {/* Offset Layer */}
@@ -376,14 +449,14 @@
             ...styles.progressOffsetLayer,
             borderRightColor: percent > 50 ? sleepGoalColorMatched : 'black',
             borderTopColor: percent > 50 ? sleepGoalColorMatched : 'black',
-            borderWidth: iconSize + deviceWidth * 0.023 * 2,
-            height: outerCircleSize,
-            width: outerCircleSize,
-            borderRadius: outerCircleBorderRadius,
+            borderWidth: iconSize + iconPadding * 2,
+            height: iconRotationCircleSize,
+            width: iconRotationCircleSize,
+            borderRadius: iconRotationCircleBorderRadius,
             transform: [{rotateZ: `${offsetLayer}deg`}],
             }}
-            {...panResponderDiffernce.panHandlers}
-        />
+            {...panResponderDifference.panHandlers}
+        /> 
 
         {/* Clock Outer Rotating Lines */}
         {Array(90).fill(0).map((item, index) => (
@@ -392,12 +465,12 @@
             style={{
                 ...styles.clockOuterDotsContainer,
                 transform: [{
-                rotateZ: `${index * 2}deg`,
+                  rotateZ: `${index * 2}deg`,
                 }],
             }}
             >
-            <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
-            <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
+              <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
+              <View style={{ ...styles.clockOuterDots, backgroundColor: outerLinesColor }} />
             </View>
         ))}
     </>
@@ -409,13 +482,14 @@
         <Animated.View style={{
             ...styles.rotatingIcon,
             backgroundColor: sleepGoalColorMatched,
-            borderRadius: iconSize + deviceWidth * 0.023,
+            padding: deviceWidth * 0.0215,
+            borderRadius: iconSize + deviceWidth * 0.0215,
             transform: [
                 {
-                    translateX: calculateArcCircle().fromX,
+                  translateX: calculateArcCircle().fromX,
                 },
                 {
-                    translateY: calculateArcCircle().fromY,
+                  translateY: calculateArcCircle().fromY,
                 }
             ],
             }}
@@ -428,14 +502,15 @@
         <Animated.View style={{
             ...styles.rotatingIcon,
             backgroundColor: sleepGoalColorMatched,
-            paddingHorizontal: deviceWidth * 0.028,
+            padding: deviceWidth * 0.023,
+            paddingHorizontal: deviceWidth * 0.0265,
             borderRadius: deviceWidth * 0.05 + deviceWidth * 0.023,
             transform: [
                 {
-                    translateX: calculateArcCircle(). toX,
+                  translateX: calculateArcCircle().toX,
                 },
                 {
-                    translateY: calculateArcCircle(). toY
+                  translateY: calculateArcCircle().toY,
                 }
             ],
             }}
@@ -460,7 +535,7 @@
                 ...styles.clockInnerDotsContainer,
                 ...styles.contentAlignCenterWithSelfAlign,
                 transform: [{
-                rotateZ: `${index * 3}deg`,
+                  rotateZ: `${index * 3}deg`,
                 }],
             }}>
                 <View style={styles.clockInnerDotsWrapper}>
@@ -552,32 +627,48 @@
   );
 
   const alarmClockComponent = () => (
-    <View style={styles.clockCircle}>
-        <View style={{
-                ...styles.contentAlignCenter,
-                height: outerCircleSize,
-                width: outerCircleSize,
-                borderRadius: outerCircleBorderRadius,
+    <View
+      style={{
+        ...styles.clockCircle,
+        height: clockCircleSize,
+        width: clockCircleSize,
+        borderRadius: clockCircleBorderRadius,
+      }}
+      onLayout={onLayout}
+    >
+      <View 
+        style={{
+          ...styles.clockCircle,
+          height: clockCircleSize,
+          width: clockCircleSize,
+          borderRadius: clockCircleBorderRadius,
+        }}
+        ref={circleRef}
+      >
+          <View style={{
+              ...styles.contentAlignCenter,
+              height: iconRotationCircleSize,
+              width: iconRotationCircleSize,
+              borderRadius: iconRotationCircleBorderRadius,
             }}
-            collapsable={false}
-            ref={circleRef}
-        >
-            {/* Icon Difference */}
-            {iconDifferenceWithRotatingLines()}
+          >
+              {/* Icon Difference */}
+              {iconDifferenceWithRotatingLines()}
 
-            {/* ROTATING ICONS */}
-            {rotatingIcons()}
+              {/* ROTATING ICONS */}
+              {rotatingIcons()}
 
-            {/* Clock Layout */}
-            {clockLayout()}
-        </View>
+              {/* Clock Layout */}
+              {clockLayout()}
+          </View>
+      </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      <Text style={styles.titleText}>{screenHeading}</Text>
+      <Text style={styles.titleText}>{alarmScreenHeading}</Text>
 
       {/* ALARM CLOCK */}
       {!modalVisible && (

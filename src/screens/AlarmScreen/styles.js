@@ -1,10 +1,11 @@
  import { StyleSheet } from 'react-native';
  
- // File Inports
+ // File Imports
  import Constants from '../../utils/constants';
 
  // Constants
- const { deviceHeight, deviceWidth } = Constants;
+ const { dimensions } = Constants;
+ const { deviceHeight, deviceWidth } = dimensions;
 
  const styles = StyleSheet.create({
     container: {
@@ -23,9 +24,6 @@
         marginTop: deviceHeight * 0.035,
     },
     clockCircle: {
-        height: deviceWidth * 0.8,
-        width: deviceWidth * 0.8,
-        borderRadius: deviceWidth * 0.8 / 2,
         backgroundColor: '#000000',
         alignSelf: 'center',
         alignItems: 'center',
@@ -132,7 +130,7 @@
         zIndex: 1,
         borderLeftColor: 'transparent',
         borderBottomColor: 'transparent',
-        marginVertical: deviceWidth * 0.002 * 2,
+        marginVertical: deviceWidth * 0.004,
     },
     clockOuterDotsContainer: {
         height: deviceWidth * 0.7,
@@ -148,8 +146,7 @@
     rotatingIcon: {
         position: 'absolute',
         zIndex: 1,
-        padding: deviceWidth * 0.023,
-        marginVertical: deviceWidth * 0.002 * 2,
+        marginVertical: deviceWidth * 0.004,
     },
     clockInnerDotsContainer: {
         position: 'absolute',
@@ -224,7 +221,7 @@
         fontWeight: '400',
    },
    goalRangeTextInput: {
-        backgroundColor: 'white',
+        backgroundColor: '#FFFFFF',
         marginHorizontal: 5,
         padding: 10,
         fontSize: 18,
